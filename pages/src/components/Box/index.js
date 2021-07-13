@@ -57,4 +57,4 @@ const Box = styled.div`
   }
 `; 
 
-export default Box
+export default Box;
