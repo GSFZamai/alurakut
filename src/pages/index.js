@@ -1,7 +1,7 @@
-import { AlurakutMenu, OrkutNostalgicIconSet } from './src/lib/AlurakutCommons';
-import MainGrid from './src/components/MainGrid';
-import Box from './src/components/Box';
-import ProfileRelationsBoxWrapper from './src/components/ProfileRelationsBoxWrapper';
+import { AlurakutMenu, OrkutNostalgicIconSet } from '../lib/AlurakutCommons';
+import MainGrid from '../components/MainGrid';
+import Box from '../components/Box';
+import ProfileRelationsBoxWrapper from '../components/ProfileRelationsBoxWrapper';
 
 function ProfileSideBar({ user }) {
   return (
