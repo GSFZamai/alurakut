@@ -1,8 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlurakutMenu, OrkutNostalgicIconSet, AlurakutProfileSidebarMenuDefault } from '../lib/AlurakutCommons';
 import MainGrid from '../components/MainGrid';
 import Box from '../components/Box';
 import ProfileRelationsBoxWrapper from '../components/ProfileRelationsBoxWrapper';
+import styled from 'styled-components';
+
+const ContainerBotoes = styled.div`
+  display: flex;
+  justify-content: space-around;
+  margin-top: 10px;
+`
 
 function ProfileSideBar({ user }) {
   return (
@@ -19,31 +26,115 @@ function ProfileSideBar({ user }) {
   )
 };
 
+function RightSideBox({ title, data }) {
+
+  const limitedRender = data.slice(0, 6);
+
+  return (
+    <ProfileRelationsBoxWrapper>
+      <h2 className="smallTitle">
+        {title} ({data.length})
+      </h2>
+      <ul>
+        {limitedRender.map((itemAtual) => {
+          return (
+            <li key={itemAtual}>
+              <a target="_blank" href={`http://github.com/${itemAtual}`}>
+                <img src={`https://github.com/${itemAtual}.png`} />
+                <span>{itemAtual}</span>
+              </a>
+            </li>
+          )
+        })}
+      </ul>
+
+    </ProfileRelationsBoxWrapper>
+  )
+}
+
+function RightSideSeguidores({ title, data }) {
+  const [initialPosition, setInitialPosition] = useState(0);
+  const [finalPosition, setFinalPosition] = useState(6);
+  const limitedRender = data.slice(initialPosition, finalPosition);
+  const total = data.length;
+  /* const totalPaginas = Math.round(total/6); */
+
+  function handleProximo() {
+    if (finalPosition < total) {
+      setInitialPosition((initialPosition + 6));
+      setFinalPosition(finalPosition + 6)
+    }
+  }
+
+  function handleVoltar() {
+    if (initialPosition > 0) {
+      setInitialPosition((initialPosition - 6));
+      setFinalPosition((finalPosition - 6));
+    }
+  }
+
+  return (
+    <ProfileRelationsBoxWrapper>
+      <h2 className="smallTitle">
+        {title} ({total})
+      </h2>
+      <ul>
+        {limitedRender.map((itemAtual) => {
+          return (
+            <li key={itemAtual.id}>
+              <a target="_blank" href={`http://github.com/${itemAtual.login}`}>
+                <img src={`https://github.com/${itemAtual.login}.png`} />
+                <span>{itemAtual.login}</span>
+              </a>
+            </li>
+          )
+        })}
+      </ul>
+      <ContainerBotoes>
+        <button onClick={handleVoltar}>Anterior</button>
+
+        <button onClick={handleProximo}>Próxima</button>
+      </ContainerBotoes>
+    </ProfileRelationsBoxWrapper>
+  )
+}
+
 export default function Home() {
   const user = 'gsfzamai';
+  const [seguindo, setSeguindo] = useState([])
   const [comunidades, setComunidades] = useState([{
     id: '131313121',
     title: 'Alurakut',
-    image: 'https://picsum.photos/200/300?'+(Math.floor(Math.random() * 101))
+    image: 'https://picsum.photos/200/300?' + (Math.floor(Math.random() * 101))
   },
   {
     id: '21312321',
     title: 'Quiça, uma palavra legal',
-    image: 'https://picsum.photos/200/300?'+(Math.floor(Math.random() * 101))
+    image: 'https://picsum.photos/200/300?' + (Math.floor(Math.random() * 101))
   }
   ]);
+  const [seguidores, setSeguidores] = useState([]);
+
   const comunidadesRenderizadas = comunidades.slice(0, 6);
 
-  const pessoasFavoritas = [
-    'juunegreiros',
-    'omariosouto',
-    'peas',
-    'rafaballerini',
-    'marcobrunodev',
-    'felipefialho'
-  ]
+  useEffect(() => {
+    fetch('https://api.github.com/users/GSFZamai/followers')
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        setSeguidores(data);
+      });
 
-  const pessoasFavoritasRenderizadas = pessoasFavoritas.slice(0, 6);
+    fetch('https://api.github.com/users/GSFZamai/following')
+      .then(response => {
+        return response.json();
+      })
+      .then(data => {
+        setSeguindo(data);
+      });
+
+  }, [])
 
   return (
     <>
@@ -71,10 +162,10 @@ export default function Home() {
                 const novaComunidade = {
                   id: new Date().toISOString,
                   title: dadoFormulario.get('title'),
-                  image: !dadoFormulario.get('image') ? 'https://picsum.photos/200/300?'+(Math.floor(Math.random() * 101)) : dadoFormulario.get('image')
+                  image: !dadoFormulario.get('image') ? 'https://picsum.photos/200/300?' + (Math.floor(Math.random() * 101)) : dadoFormulario.get('image')
                 }
 
-                const comunidadesAtualizadas = [...comunidades, novaComunidade];
+                const comunidadesAtualizadas = [novaComunidade, ...comunidades];
 
                 setComunidades(comunidadesAtualizadas);
               }
@@ -103,24 +194,10 @@ export default function Home() {
           </Box>
         </div>
         <div className="profileRelationArea" style={{ gridArea: 'profileRelationsArea' }}>
-          <ProfileRelationsBoxWrapper>
-            <h2 className="smallTitle">
-              Pessoas da comunidade ({pessoasFavoritas.length})
-            </h2>
-            <ul>
-              {pessoasFavoritasRenderizadas.map((itemAtual) => {
-                return (
-                  <li key={itemAtual}>
-                    <a target="_blank" href={`http://github.com/${itemAtual}`}>
-                      <img src={`https://github.com/${itemAtual}.png`} />
-                      <span>{itemAtual}</span>
-                    </a>
-                  </li>
-                )
-              })}
-            </ul>
 
-          </ProfileRelationsBoxWrapper>
+          <RightSideSeguidores title="Pessoas que eu sigo" data={seguindo} />
+          <RightSideSeguidores title="Pessoas que me seguem" data={seguidores} />
+
           <ProfileRelationsBoxWrapper>
             <h2 className="smallTitle">
               Comunidade ({comunidades.length})
