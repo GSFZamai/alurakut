@@ -91,9 +91,13 @@ function RightSideSeguidores({ title, data }) {
         })}
       </ul>
       <ContainerBotoes>
-        <button onClick={handleVoltar}>Anterior</button>
+        {!(initialPosition <=0) &&
+          <button onClick={handleVoltar}>Anterior</button>
+        }
 
-        <button onClick={handleProximo}>Próxima</button>
+        {!(finalPosition >= total) &&
+          <button onClick={handleProximo}>Próxima</button>
+        }
       </ContainerBotoes>
     </ProfileRelationsBoxWrapper>
   )
