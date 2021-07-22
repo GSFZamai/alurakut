@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { AlurakutMenu, OrkutNostalgicIconSet, AlurakutProfileSidebarMenuDefault } from '../lib/AlurakutCommons';
-import MainGrid from '../components/MainGrid';
-import Box from '../components/Box';
-import ProfileRelationsBoxWrapper from '../components/ProfileRelationsBoxWrapper';
+import { AlurakutMenu, OrkutNostalgicIconSet, AlurakutProfileSidebarMenuDefault } from '../src/lib/AlurakutCommons';
+import MainGrid from '../src/components/MainGrid';
+import Box from '../src/components/Box';
+import ProfileRelationsBoxWrapper from '../src/components/ProfileRelationsBoxWrapper';
 import styled from 'styled-components';
 
 const ContainerBotoes = styled.div`
@@ -91,7 +91,7 @@ function RightSideSeguidores({ title, data }) {
         })}
       </ul>
       <ContainerBotoes>
-        {!(initialPosition <=0) &&
+        {!(initialPosition <= 0) &&
           <button onClick={handleVoltar}>Anterior</button>
         }
 
@@ -138,6 +138,34 @@ export default function Home() {
         setSeguindo(data);
       });
 
+    /* 
+      curl 'https://graphql.datocms.com/' \
+      -H 'Authorization: YOUR-API-TOKEN' \
+      -H 'Content-Type: application/json' \
+      -H 'Accept: application/json' \
+      --data-binary '{ "query": "query { allPosts { title } }" }'
+    */
+
+    fetch('https://graphql.datocms.com/', {
+      method: 'POST',
+      headers: {
+        'Authorization': '07ffd3eee7a7e3877ec40c3c8713fd',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        'query': `query {
+          allComunities {
+              id
+              title
+              imageurl
+              creatorslug
+            }
+          }`
+      })
+    }).then(response => response.json())
+      .then(respostaCompleta => {setComunidades(respostaCompleta.data.allComunities)})
+
   }, [])
 
   return (
@@ -164,14 +192,27 @@ export default function Home() {
                 const dadoFormulario = new FormData(event.target);
 
                 const novaComunidade = {
-                  id: new Date().toISOString,
                   title: dadoFormulario.get('title'),
-                  image: !dadoFormulario.get('image') ? 'https://picsum.photos/200/300?' + (Math.floor(Math.random() * 101)) : dadoFormulario.get('image')
-                }
+                  imageurl: !dadoFormulario.get('image') ? 'https://picsum.photos/200/300?' + (Math.floor(Math.random() * 101)) : dadoFormulario.get('image'),
+                  creatorslug: user
+                }                
 
-                const comunidadesAtualizadas = [novaComunidade, ...comunidades];
+                fetch('/api/comunidades', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                  },
+                  body: JSON.stringify(novaComunidade)
+                })
+                .then( async (response) => {
+                  const comunidadeCriada = await response.json();
+                  console.log(comunidadeCriada);
+                  const comunidadesAtualizadas = [comunidadeCriada, ...comunidades];
+                  setComunidades(comunidadesAtualizadas);
+                })
 
-                setComunidades(comunidadesAtualizadas);
+
               }
               }
             >
@@ -209,9 +250,9 @@ export default function Home() {
             <ul>
               {comunidadesRenderizadas.map((itemAtual) => {
                 return (
-                  <li key={itemAtual}>
-                    <a href={`users/${itemAtual}`} >
-                      <img src={itemAtual.image} />
+                  <li key={itemAtual.id}>
+                    <a href={`users/${itemAtual.creatorslug}`} >
+                      <img src={itemAtual.imageurl} />
                       <span>{itemAtual.title}</span>
                     </a>
                   </li>
